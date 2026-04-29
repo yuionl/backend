@@ -1,0 +1,6 @@
+User a001 exists!
+ID: 1
+Username: a001
+Password: 123456
+Name: Íõ¹ã·É
+Role: 1

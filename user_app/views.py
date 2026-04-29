@@ -1,8 +1,21 @@
+import json
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Count, Q
 from django.views.decorators.csrf import csrf_exempt
 from .models import User, Question, Task, AnswerRecord, Course, CourseStudent, Classroom, TaskScore
+
+
+def get_request_data(request):
+    if request.method == 'POST':
+        try:
+            body = request.body.decode('utf-8')
+            if body:
+                return json.loads(body)
+        except:
+            pass
+        return request.POST
+    return request.GET
 
 
 def index(request):
@@ -36,10 +49,11 @@ def index(request):
 
 @csrf_exempt
 def register(request):
-    username = request.POST.get('username')
-    password = request.POST.get('password')
-    name = request.POST.get('name')
-    role = request.POST.get('role')
+    data = get_request_data(request)
+    username = data.get('username')
+    password = data.get('password')
+    name = data.get('name')
+    role = data.get('role')
 
     if User.objects.filter(username=username).exists():
         return JsonResponse({'code': 0, 'msg': '用户名已存在'})
@@ -55,8 +69,9 @@ def register(request):
 
 @csrf_exempt
 def login(request):
-    username = request.POST.get('username')
-    password = request.POST.get('password')
+    data = get_request_data(request)
+    username = data.get('username')
+    password = data.get('password')
 
     try:
         user = User.objects.get(username=username, password=password)

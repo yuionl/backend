@@ -1,0 +1,2 @@
+Error: duplicate key value violates unique constraint "user_app_user_pkey"
+DETAIL:  Key (id)=(6) already exists.
