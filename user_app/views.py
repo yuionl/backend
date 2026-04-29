@@ -33,6 +33,7 @@ def index(request):
     return HttpResponse(html_content)
 
 
+@csrf_exempt
 def register(request):
     username = request.GET.get('username')
     password = request.GET.get('password')
@@ -51,6 +52,7 @@ def register(request):
     return JsonResponse({'code': 1, 'msg': '注册成功'})
 
 
+@csrf_exempt
 def login(request):
     username = request.GET.get('username')
     password = request.GET.get('password')
@@ -70,6 +72,7 @@ def login(request):
         })
 
 
+@csrf_exempt
 def create_question(request):
     title = request.GET.get('title', '').strip()
     q_type = request.GET.get('q_type', '').strip()
@@ -115,6 +118,7 @@ def create_question(request):
         return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)}'})
 
 
+@csrf_exempt
 def get_question_list(request):
     username = request.GET.get('username')
     course = request.GET.get('course', '')
@@ -163,6 +167,7 @@ def get_question_list(request):
         return JsonResponse({'code': 0, 'msg': f'获取题库失败：{str(e)}'})
 
 
+@csrf_exempt
 def delete_questions(request):
     username = request.GET.get('username')
     q_ids_str = request.GET.get('q_ids')
@@ -179,6 +184,7 @@ def delete_questions(request):
         return JsonResponse({'code': 0, 'msg': f'删除失败：{str(e)}'})
 
 
+@csrf_exempt
 def get_question_detail(request):
     question_id = request.GET.get('question_id')
     if not question_id:
@@ -204,6 +210,7 @@ def get_question_detail(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def update_question(request):
     question_id = request.GET.get('question_id')
     title = request.GET.get('title', '').strip()
@@ -237,6 +244,7 @@ def update_question(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def create_course(request):
     name = request.GET.get('name', '').strip()
     semester = request.GET.get('semester', '').strip()
@@ -266,6 +274,7 @@ def create_course(request):
         return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)}'})
 
 
+@csrf_exempt
 def get_teacher_courses(request):
     username = request.GET.get('username')
     try:
@@ -292,6 +301,7 @@ def get_teacher_courses(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_course_students(request):
     course_id = request.GET.get('course_id')
     if not course_id:
@@ -317,6 +327,7 @@ def get_course_students(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_course_statistics(request):
     course_id = request.GET.get('course_id')
     if not course_id:
@@ -368,6 +379,7 @@ def get_course_statistics(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_classroom_history_stats(request):
     course_id = request.GET.get('course_id')
     if not course_id:
@@ -413,6 +425,7 @@ def get_classroom_history_stats(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_classroom_overview(request):
     classroom_id = request.GET.get('classroom_id')
     if not classroom_id:
@@ -469,6 +482,7 @@ def get_classroom_overview(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_question_analysis(request):
     classroom_id = request.GET.get('classroom_id')
     if not classroom_id:
@@ -523,6 +537,7 @@ def get_question_analysis(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_rank(request):
     classroom_id = request.GET.get('classroom_id')
     if not classroom_id:
@@ -606,6 +621,7 @@ def calculate_task_scores(task_id):
             )
 
 
+@csrf_exempt
 def get_classroom_rank(request):
     classroom_id = request.GET.get('classroom_id')
     if not classroom_id:
@@ -663,6 +679,7 @@ def get_classroom_rank(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_course_total_rank(request):
     course_id = request.GET.get('course_id')
     if not course_id:
@@ -722,6 +739,7 @@ def get_course_total_rank(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_teacher_student_profile(request):
     username = request.GET.get('username')
     course_id = request.GET.get('course_id')
@@ -806,6 +824,7 @@ def get_teacher_student_profile(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_analysis(request):
     username = request.GET.get('username')
     
@@ -916,6 +935,7 @@ def get_student_analysis(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def remove_course_student(request):
     course_id = request.GET.get('course_id')
     student_id = request.GET.get('student_id')
@@ -929,6 +949,7 @@ def remove_course_student(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def join_course(request):
     code = request.GET.get('code', '').strip().upper()
     username = request.GET.get('username', '').strip()
@@ -958,6 +979,7 @@ def join_course(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_courses(request):
     username = request.GET.get('username')
     try:
@@ -983,6 +1005,7 @@ def get_student_courses(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def exit_course(request):
     course_id = request.GET.get('course_id')
     username = request.GET.get('username')
@@ -998,6 +1021,7 @@ def exit_course(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def create_task(request):
     title = request.GET.get('title')
     description = request.GET.get('desc')
@@ -1033,6 +1057,7 @@ def create_task(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_teacher_tasks(request):
     username = request.GET.get('username')
     course_id = request.GET.get('course_id', '')
@@ -1066,6 +1091,7 @@ def get_teacher_tasks(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_tasks(request):
     username = request.GET.get('username')
     course_id = request.GET.get('course_id', '')
@@ -1109,6 +1135,7 @@ def get_student_tasks(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_task_status(request):
     username = request.GET.get('username')
     task_ids_str = request.GET.get('task_ids', '')
@@ -1141,6 +1168,7 @@ def get_student_task_status(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_task_questions(request):
     task_id = request.GET.get('task_id')
     if not task_id or not task_id.isdigit():
@@ -1171,6 +1199,7 @@ def get_task_questions(request):
         return JsonResponse({'code': 0, 'msg': f'获取题目失败：{str(e)}'})
 
 
+@csrf_exempt
 def submit_answer(request):
     task_id = request.GET.get('task_id')
     q_id = request.GET.get('q_id')
@@ -1216,6 +1245,7 @@ def submit_answer(request):
         return JsonResponse({'code': 0, 'msg': f'提交失败：{str(e)}'})
 
 
+@csrf_exempt
 def task_statistics(request):
     task_id = request.GET.get('task_id')
     try:
@@ -1249,6 +1279,7 @@ def task_statistics(request):
         return JsonResponse({'code':0, 'msg':'错误'})
 
 
+@csrf_exempt
 def get_essay_answers(request):
     task_id = request.GET.get('task_id')
     if not task_id:
@@ -1275,6 +1306,7 @@ def get_essay_answers(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def grade_essay(request):
     record_id = request.GET.get('record_id')
     is_correct = request.GET.get('is_correct')
@@ -1291,6 +1323,7 @@ def grade_essay(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_answered_tasks(request):
     username = request.GET.get('username')
     if not username:
@@ -1325,6 +1358,7 @@ def get_student_answered_tasks(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_task_detail(request):
     username = request.GET.get('username')
     task_id = request.GET.get('task_id')
@@ -1390,6 +1424,7 @@ def upload_image(request):
     return JsonResponse({'code': 1, 'msg': '上传成功', 'url': url})
 
 
+@csrf_exempt
 def create_classroom(request):
     course_id = request.GET.get('course_id')
     name = request.GET.get('name', '').strip()
@@ -1428,6 +1463,7 @@ def create_classroom(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_active_classroom(request):
     course_id = request.GET.get('course_id')
     if not course_id:
@@ -1457,6 +1493,7 @@ def get_active_classroom(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def end_classroom(request):
     classroom_id = request.GET.get('classroom_id')
     username = request.GET.get('username')
@@ -1486,6 +1523,7 @@ def end_classroom(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_classroom_detail(request):
     classroom_id = request.GET.get('classroom_id')
     if not classroom_id:
@@ -1534,6 +1572,7 @@ def get_classroom_detail(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_classroom_history(request):
     course_id = request.GET.get('course_id')
     if not course_id:
@@ -1561,6 +1600,7 @@ def get_classroom_history(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def create_task_in_classroom(request):
     title = request.GET.get('title')
     description = request.GET.get('desc')
@@ -1604,6 +1644,7 @@ def create_task_in_classroom(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_classroom(request):
     course_id = request.GET.get('course_id')
     if not course_id:
@@ -1639,6 +1680,7 @@ def get_student_classroom(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+@csrf_exempt
 def get_student_performance(request):
     username = request.GET.get('username')
     course_id = request.GET.get('course_id')
