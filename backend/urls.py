@@ -7,6 +7,7 @@ from user_app import views
 urlpatterns = [
     path('', views.index),
     path('admin/', admin.site.urls),
+    path('debug/', views.debug_info),
     path('login/', views.login),
     path('register/', views.register),
     path('create_question/', views.create_question),

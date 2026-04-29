@@ -68,6 +68,24 @@ def register(request):
 
 
 @csrf_exempt
+def debug_info(request):
+    from django.db import connection
+    from django.conf import settings
+    users_count = User.objects.count()
+    courses_count = Course.objects.count()
+    questions_count = Question.objects.count()
+    db_engine = settings.DATABASES['default']['ENGINE']
+    db_name = settings.DATABASES['default'].get('NAME', 'unknown')
+    
+    return JsonResponse({
+        'db_engine': db_engine,
+        'db_name': db_name,
+        'users_count': users_count,
+        'courses_count': courses_count,
+        'questions_count': questions_count
+    })
+
+@csrf_exempt
 def login(request):
     data = get_request_data(request)
     username = data.get('username')

@@ -1,0 +1,8 @@
+user_app_user: 6
+user_app_course: 3
+user_app_question: 1
+user_app_task: 8
+user_app_classroom: 14
+user_app_answerrecord: 11
+user_app_taskscore: 6
+user_app_coursestudent: 5
