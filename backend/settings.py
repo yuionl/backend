@@ -57,38 +57,20 @@ WSGI_APPLICATION = "backend.wsgi.application"
 # 数据库配置
 import os
 
-# 尝试使用 PostgreSQL，失败则使用 SQLite
-try:
-    import psycopg2
-    conn = psycopg2.connect(
-        dbname="neondb",
-        user="neondb_owner",
-        password="npg_HWIGQDhTs71Y",
-        host="ep-rough-wind-aogm1es1-pooler.c-2.ap-southeast-1.aws.neon.tech",
-        port="5432",
-        sslmode="require"
-    )
-    conn.close()
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.postgresql",
-            "NAME": "neondb",
-            "USER": "neondb_owner",
-            "PASSWORD": "npg_HWIGQDhTs71Y",
-            "HOST": "ep-rough-wind-aogm1es1-pooler.c-2.ap-southeast-1.aws.neon.tech",
-            "PORT": "5432",
-            "OPTIONS": {
-                "sslmode": "require",
-            },
-        }
+# 强制使用 PostgreSQL（Vercel 环境）
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.postgresql",
+        "NAME": "neondb",
+        "USER": "neondb_owner",
+        "PASSWORD": "npg_HWIGQDhTs71Y",
+        "HOST": "ep-rough-wind-aogm1es1-pooler.c-2.ap-southeast-1.aws.neon.tech",
+        "PORT": "5432",
+        "OPTIONS": {
+            "sslmode": "require",
+        },
     }
-except:
-    DATABASES = {
-        "default": {
-            "ENGINE": "django.db.backends.sqlite3",
-            "NAME": BASE_DIR / "db.sqlite3",
-        }
-    }
+}
 
 AUTH_PASSWORD_VALIDATORS = [
     {
