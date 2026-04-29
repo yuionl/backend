@@ -13,8 +13,9 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 import django
 django.setup()
 
-# Import the WSGI application
-from backend.wsgi import application
+# Import the ASGI application
+from backend.asgi import application as asgi_application
 
-# Export for Vercel
-app = application
+# Vercel ASGI handler
+async def app(scope, receive, send):
+    await asgi_application(scope, receive, send)
