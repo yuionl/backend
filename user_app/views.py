@@ -86,6 +86,57 @@ def debug_info(request):
     })
 
 @csrf_exempt
+def fix_sequences(request):
+    from django.db import connection
+    results = []
+    
+    # 检查并修复所有表的序列
+    tables = [
+        (User, 'user_app_user'),
+        (Course, 'user_app_course'),
+        (Question, 'user_app_question'),
+        (Task, 'user_app_task'),
+        (Classroom, 'user_app_classroom'),
+        (AnswerRecord, 'user_app_answerrecord'),
+        (TaskScore, 'user_app_taskscore'),
+        (CourseStudent, 'user_app_coursestudent')
+    ]
+    
+    for model, table_name in tables:
+        try:
+            # 获取最大id
+            max_id = model.objects.all().aggregate(max_id=models.Max('id'))['max_id'] or 0
+            with connection.cursor() as cursor:
+                # 获取序列名
+                cursor.execute(f"SELECT pg_get_serial_sequence('{table_name}', 'id')")
+                seq_name = cursor.fetchone()[0]
+                
+                if seq_name:
+                    # 修复序列
+                    cursor.execute(f"SELECT setval('{seq_name}', {max_id}, true)")
+                    new_val = cursor.fetchone()[0]
+                    results.append({
+                        'table': table_name,
+                        'max_id': max_id,
+                        'sequence': seq_name,
+                        'set_to': new_val,
+                        'status': 'success'
+                    })
+                else:
+                    results.append({
+                        'table': table_name,
+                        'status': 'no_sequence_found'
+                    })
+        except Exception as e:
+            results.append({
+                'table': table_name,
+                'status': 'error',
+                'error': str(e)
+            })
+    
+    return JsonResponse({'results': results})
+
+@csrf_exempt
 def login(request):
     data = get_request_data(request)
     username = data.get('username')
