@@ -54,20 +54,30 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# 数据库配置 - 使用 Neon PostgreSQL
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.postgresql",
-        "NAME": "neondb",
-        "USER": "neondb_owner",
-        "PASSWORD": "npg_HWIGQDhTs71Y",
-        "HOST": "ep-rough-wind-aogm1es1-pooler.c-2.ap-southeast-1.aws.neon.tech",
-        "PORT": "5432",
-        "OPTIONS": {
-            "sslmode": "require",
-        },
+# 数据库配置
+if os.environ.get('VERCEL'):
+    # Vercel 环境：使用 Neon PostgreSQL
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.postgresql",
+            "NAME": "neondb",
+            "USER": "neondb_owner",
+            "PASSWORD": "npg_HWIGQDhTs71Y",
+            "HOST": "ep-rough-wind-aogm1es1-pooler.c-2.ap-southeast-1.aws.neon.tech",
+            "PORT": "5432",
+            "OPTIONS": {
+                "sslmode": "require",
+            },
+        }
     }
-}
+else:
+    # 本地环境：使用 SQLite
+    DATABASES = {
+        "default": {
+            "ENGINE": "django.db.backends.sqlite3",
+            "NAME": BASE_DIR / "db.sqlite3",
+        }
+    }
 
 AUTH_PASSWORD_VALIDATORS = [
     {
