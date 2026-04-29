@@ -73,6 +73,10 @@ def login(request):
     username = data.get('username')
     password = data.get('password')
 
+    print(f"DEBUG: username={username}, password={password}")
+    print(f"DEBUG: request.method={request.method}")
+    print(f"DEBUG: request.body={request.body}")
+
     try:
         user = User.objects.get(username=username, password=password)
         return JsonResponse({
