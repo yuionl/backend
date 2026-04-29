@@ -9,10 +9,7 @@
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "api/index.py",
-      "headers": {
-        "X-App": "Django"
-      }
+      "dest": "api/index.py"
     }
   ]
 }

@@ -1,16 +1,20 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 import os
 import sys
 
-# Add project root to path
+# Add the project root to the path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-# Set Django settings module
+# Set the Django settings module
 os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
-# Setup Django
+# Import Django and setup
 import django
 django.setup()
 
-# Create WSGI app
-from django.core.wsgi import get_wsgi_application
-app = get_wsgi_application()
+# Import the WSGI application
+from backend.wsgi import application
+
+# Export for Vercel
+app = application
