@@ -36,10 +36,10 @@ def index(request):
 
 @csrf_exempt
 def register(request):
-    username = request.GET.get('username')
-    password = request.GET.get('password')
-    name = request.GET.get('name')
-    role = request.GET.get('role')
+    username = request.POST.get('username')
+    password = request.POST.get('password')
+    name = request.POST.get('name')
+    role = request.POST.get('role')
 
     if User.objects.filter(username=username).exists():
         return JsonResponse({'code': 0, 'msg': '用户名已存在'})
@@ -55,8 +55,8 @@ def register(request):
 
 @csrf_exempt
 def login(request):
-    username = request.GET.get('username')
-    password = request.GET.get('password')
+    username = request.POST.get('username')
+    password = request.POST.get('password')
 
     try:
         user = User.objects.get(username=username, password=password)
