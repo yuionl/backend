@@ -54,14 +54,21 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# 数据库配置 - Vercel 使用 PostgreSQL，本地使用 SQLite
+# 数据库配置
 import os
 
-# Vercel 环境检测
-VERCEL_ENV = os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
-
-if VERCEL_ENV:
-    # Vercel 环境：使用 Neon PostgreSQL
+# 尝试使用 PostgreSQL，失败则使用 SQLite
+try:
+    import psycopg2
+    conn = psycopg2.connect(
+        dbname="neondb",
+        user="neondb_owner",
+        password="npg_HWIGQDhTs71Y",
+        host="ep-rough-wind-aogm1es1-pooler.c-2.ap-southeast-1.aws.neon.tech",
+        port="5432",
+        sslmode="require"
+    )
+    conn.close()
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.postgresql",
@@ -75,8 +82,7 @@ if VERCEL_ENV:
             },
         }
     }
-else:
-    # 本地环境：使用 SQLite
+except:
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
