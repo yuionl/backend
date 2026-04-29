@@ -1,17 +1,17 @@
 import os
 import sys
 
-# Add the project root to the path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+# Add project root to path
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+sys.path.insert(0, project_root)
 
-# Set the Django settings module
-os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings")
+# Set Django settings
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 
-# Import Django and setup
+# Setup Django
 import django
 django.setup()
 
-from backend.wsgi import application
-
-# Vercel requires the app to be called "app"
-app = application
+# Import WSGI app
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
