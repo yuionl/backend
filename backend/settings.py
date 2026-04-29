@@ -54,8 +54,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# 数据库配置
-if os.environ.get('VERCEL'):
+# 数据库配置 - Vercel 使用 PostgreSQL，本地使用 SQLite
+import os
+
+# Vercel 环境检测
+VERCEL_ENV = os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME')
+
+if VERCEL_ENV:
     # Vercel 环境：使用 Neon PostgreSQL
     DATABASES = {
         "default": {
