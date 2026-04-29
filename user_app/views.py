@@ -4,6 +4,22 @@ from django.db.models import Count, Q
 from .models import User, Question, Task, AnswerRecord, Course, CourseStudent, Classroom, TaskScore
 
 
+def index(request):
+    return JsonResponse({
+        'code': 1,
+        'msg': '课堂互动系统 API 已上线',
+        'version': '1.0.0',
+        'endpoints': {
+            '登录': '/login/',
+            '注册': '/register/',
+            '教师课程': '/get_teacher_courses/',
+            '学生课程': '/get_student_courses/',
+            '创建课堂': '/create_classroom/',
+            '提交答题': '/submit_answer/',
+        }
+    })
+
+
 def register(request):
     username = request.GET.get('username')
     password = request.GET.get('password')
