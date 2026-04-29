@@ -1,6 +1,7 @@
 from django.http import JsonResponse
 from django.utils import timezone
 from django.db.models import Count, Q
+from django.views.decorators.csrf import csrf_exempt
 from .models import User, Question, Task, AnswerRecord, Course, CourseStudent, Classroom, TaskScore
 
 
@@ -1395,7 +1396,6 @@ def get_student_task_detail(request):
 
 import os
 import uuid
-from django.views.decorators.csrf import csrf_exempt
 from django.core.files.storage import default_storage
 
 @csrf_exempt
