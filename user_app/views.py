@@ -5,19 +5,62 @@ from .models import User, Question, Task, AnswerRecord, Course, CourseStudent, C
 
 
 def index(request):
-    return JsonResponse({
-        'code': 1,
-        'msg': '课堂互动系统 API 已上线',
-        'version': '1.0.0',
-        'endpoints': {
-            '登录': '/login/',
-            '注册': '/register/',
-            '教师课程': '/get_teacher_courses/',
-            '学生课程': '/get_student_courses/',
-            '创建课堂': '/create_classroom/',
-            '提交答题': '/submit_answer/',
-        }
-    })
+    html_content = """
+    <!DOCTYPE html>
+    <html lang="zh-CN">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>课堂互动系统</title>
+        <style>
+            body {
+                font-family: 'Microsoft YaHei', Arial, sans-serif;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                min-height: 100vh;
+                margin: 0;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                color: white;
+            }
+            .container {
+                text-align: center;
+                background: rgba(255, 255, 255, 0.1);
+                padding: 50px;
+                border-radius: 20px;
+                backdrop-filter: blur(10px);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            }
+            h1 {
+                font-size: 48px;
+                margin-bottom: 30px;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            }
+            img {
+                max-width: 300px;
+                border-radius: 15px;
+                box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+                margin: 20px 0;
+            }
+            .subtitle {
+                font-size: 18px;
+                opacity: 0.9;
+                margin-top: 20px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>你好！欢迎使用课堂互动系统</h1>
+            <img src="https://pic.imgdb.cn/item/6f8b5c1f1e3a582f2443e65b.png" alt="课堂互动系统">
+            <p class="subtitle">基于 Django + 微信小程序的在线课堂互动平台</p>
+        </div>
+    </body>
+    </html>
+    """
+    from django.http import HttpResponse
+    return HttpResponse(html_content)
 
 
 def register(request):
