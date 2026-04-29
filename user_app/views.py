@@ -73,11 +73,19 @@ def login(request):
     username = data.get('username')
     password = data.get('password')
 
-    return JsonResponse({
-        'received': {'username': username, 'password': password},
-        'body': request.body.decode('utf-8') if request.body else 'EMPTY',
-        'method': request.method
-    })
+    try:
+        user = User.objects.get(username=username, password=password)
+        return JsonResponse({
+            'code': 1,
+            'msg': '登录成功',
+            'role': user.role,
+            'name': user.name
+        })
+    except User.DoesNotExist:
+        return JsonResponse({
+            'code': 0,
+            'msg': '用户名或密码错误'
+        })
 
 
 @csrf_exempt
