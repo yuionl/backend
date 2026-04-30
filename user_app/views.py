@@ -88,6 +88,7 @@ def debug_info(request):
 @csrf_exempt
 def fix_sequences(request):
     from django.db import connection
+    from django.db.models import Max
     results = []
     
     # 检查并修复所有表的序列
@@ -105,7 +106,7 @@ def fix_sequences(request):
     for model, table_name in tables:
         try:
             # 获取最大id
-            max_id = model.objects.all().aggregate(max_id=models.Max('id'))['max_id'] or 0
+            max_id = model.objects.all().aggregate(max_id=Max('id'))['max_id'] or 0
             with connection.cursor() as cursor:
                 # 获取序列名
                 cursor.execute(f"SELECT pg_get_serial_sequence('{table_name}', 'id')")
