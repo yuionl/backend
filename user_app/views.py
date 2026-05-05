@@ -376,7 +376,7 @@ def get_teacher_courses(request):
     try:
         teacher = User.objects.get(username=username, role=1)
         courses = Course.objects.filter(teacher=teacher).order_by('-create_time').annotate(
-            student_count=Count('student_records'),
+            student_count=Count('student_records__id', distinct=True),
             task_count=Count('tasks')
         )
         
@@ -1094,7 +1094,7 @@ def get_student_courses(request):
     try:
         student = User.objects.get(username=username, role=2)
         course_students = CourseStudent.objects.filter(student=student).select_related('course', 'course__teacher').annotate(
-            task_count=Count('course__task')
+            task_count=Count('course__tasks')
         )
         result = []
         for cs in course_students:
