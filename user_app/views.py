@@ -1,5 +1,5 @@
 import json
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
 from django.utils import timezone
 from django.db.models import Count, Q
 from django.views.decorators.csrf import csrf_exempt
@@ -11,11 +11,26 @@ def get_request_data(request):
         try:
             body = request.body.decode('utf-8')
             if body:
-                return json.loads(body)
+                try:
+                    return json.loads(body)
+                except:
+                    pass
         except:
             pass
-        return request.POST
+        # 支持表单数据
+        data = {}
+        for key, value in request.POST.items():
+            data[key] = value
+        return data
     return request.GET
+
+def format_datetime(dt, fmt='%Y-%m-%d %H:%M'):
+    """安全地格式化 datetime 对象，处理带时区和不带时区的情况"""
+    if not dt:
+        return ''
+    if dt.tzinfo:
+        return dt.astimezone().strftime(fmt)
+    return dt.strftime(fmt)
 
 
 def index(request):
@@ -49,22 +64,42 @@ def index(request):
 
 @csrf_exempt
 def register(request):
-    data = get_request_data(request)
-    username = data.get('username')
-    password = data.get('password')
-    name = data.get('name')
-    role = data.get('role')
+    try:
+        data = get_request_data(request)
+        print(f"Register request data: {data}")  # 调试日志
+        
+        user = data.get('user')
+        pwd = data.get('pwd')
+        name = data.get('name')
+        role = data.get('role', 2)  # 默认角色为学生
 
-    if User.objects.filter(username=username).exists():
-        return JsonResponse({'code': 0, 'msg': '用户名已存在'})
+        # 验证必填字段
+        if not user or not user.strip():
+            return JsonResponse({'code': 0, 'msg': '请输入用户名'})
+        if not pwd or not pwd.strip():
+            return JsonResponse({'code': 0, 'msg': '请输入密码'})
+        if not name or not name.strip():
+            return JsonResponse({'code': 0, 'msg': '请输入姓名'})
 
-    User.objects.create(
-        username=username,
-        password=password,
-        name=name,
-        role=role
-    )
-    return JsonResponse({'code': 1, 'msg': '注册成功'})
+        # 尝试转换角色为整数
+        try:
+            role = int(role)
+        except (ValueError, TypeError):
+            role = 2
+
+        if User.objects.filter(username=user.strip()).exists():
+            return JsonResponse({'code': 0, 'msg': '用户名已存在'})
+
+        User.objects.create(
+            username=user.strip(),
+            password=pwd.strip(),
+            name=name.strip(),
+            role=role
+        )
+        return JsonResponse({'code': 1, 'msg': '注册成功'})
+    except Exception as e:
+        print(f"Register error: {str(e)}")  # 调试日志
+        return JsonResponse({'code': 0, 'msg': f'注册失败: {str(e)}'})
 
 
 @csrf_exempt
@@ -141,11 +176,11 @@ def fix_sequences(request):
 @csrf_exempt
 def login(request):
     data = get_request_data(request)
-    username = data.get('username')
-    password = data.get('password')
+    username_input = data.get('user')
+    password_input = data.get('pwd')
 
     try:
-        user = User.objects.get(username=username, password=password)
+        user = User.objects.get(username=username_input, password=password_input)
         return JsonResponse({
             'code': 1,
             'msg': '登录成功',
@@ -167,7 +202,7 @@ def create_question(request):
     course = request.GET.get('course', '').strip()
     options = request.GET.get('options', '').strip()
     answer = request.GET.get('answer', '').strip()
-    create_by = request.GET.get('username', '').strip()
+    create_by = request.GET.get('user', '').strip()
 
     if not q_type:
         q_type = request.GET.get('type', '').strip()
@@ -207,13 +242,13 @@ def create_question(request):
 
 @csrf_exempt
 def get_question_list(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     course = request.GET.get('course', '')
     level = request.GET.get('level', '')
     q_type = request.GET.get('q_type', '')
 
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         questions = Question.objects.filter(create_by=teacher)
 
         total = questions.count()
@@ -256,14 +291,14 @@ def get_question_list(request):
 
 @csrf_exempt
 def delete_questions(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     q_ids_str = request.GET.get('q_ids')
 
-    if not username or not q_ids_str:
+    if not user or not q_ids_str:
         return JsonResponse({'code': 0, 'msg': '参数缺失'})
 
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         q_ids = [int(qid) for qid in q_ids_str.split(',') if qid.strip().isdigit()]
         Question.objects.filter(id__in=q_ids, create_by=teacher).delete()
         return JsonResponse({'code': 1, 'msg': '删除成功'})
@@ -333,16 +368,17 @@ def update_question(request):
 
 @csrf_exempt
 def create_course(request):
-    name = request.GET.get('name', '').strip()
-    semester = request.GET.get('semester', '').strip()
-    description = request.GET.get('description', '').strip()
-    username = request.GET.get('username', '').strip()
+    data = get_request_data(request)
+    name = data.get('name', '').strip()
+    semester = data.get('semester', '').strip()
+    description = data.get('description', '').strip()
+    user = data.get('user', '').strip()
 
-    if not name or not semester or not username:
+    if not name or not semester or not user:
         return JsonResponse({'code': 0, 'msg': '请填写课程名称和学期'})
 
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         course = Course.objects.create(
             name=name,
             semester=semester,
@@ -363,25 +399,36 @@ def create_course(request):
 
 @csrf_exempt
 def get_teacher_courses(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     try:
-        teacher = User.objects.get(username=username, role=1)
-        courses = Course.objects.filter(teacher=teacher).order_by('-create_time')
-        result = []
+        teacher = User.objects.get(username=user, role=1)
+        courses = Course.objects.filter(teacher=teacher).order_by('-create_time').annotate(
+            student_count=Count('coursestudent'),
+            task_count=Count('task')
+        )
+        
+        active_classrooms = Classroom.objects.filter(
+            course_id__in=[c.id for c in courses], 
+            is_active=True
+        ).select_related('course')
+        active_classroom_dict = {ac.course_id: ac for ac in active_classrooms}
+        
+        res = []
         for c in courses:
-            student_count = CourseStudent.objects.filter(course=c).count()
-            task_count = Task.objects.filter(course=c).count()
-            result.append({
+            active_classroom = active_classroom_dict.get(c.id)
+            res.append({
                 'id': c.id,
                 'name': c.name,
                 'code': c.code,
                 'semester': c.semester,
                 'description': c.description or '',
-                'student_count': student_count,
-                'task_count': task_count,
-                'create_time': c.create_time.astimezone().strftime('%Y-%m-%d %H:%M') if c.create_time else ''
+                'student_count': c.student_count,
+                'task_count': c.task_count,
+                'create_time': format_datetime(c.create_time),
+                'has_active_classroom': True if active_classroom else False,
+                'active_classroom_id': active_classroom.id if active_classroom else None
             })
-        return JsonResponse({'code': 1, 'data': result})
+        return JsonResponse({'code': 1, 'data': res})
     except User.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '教师不存在'})
     except Exception as e:
@@ -397,17 +444,15 @@ def get_course_students(request):
     try:
         course = Course.objects.get(id=course_id)
         students = CourseStudent.objects.filter(course=course).select_related('student')
-        result = []
+        res = []
         for cs in students:
-            # 转换为本地时间
-            local_time = cs.join_time.astimezone()
-            result.append({
+            res.append({
                 'id': cs.student.id,
                 'username': cs.student.username,
                 'name': cs.student.name,
-                'join_time': local_time.strftime('%Y-%m-%d %H:%M')
+                'join_time': format_datetime(cs.join_time)
             })
-        return JsonResponse({'code': 1, 'data': result, 'course_name': course.name})
+        return JsonResponse({'code': 1, 'data': res, 'course_name': course.name})
     except Course.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '课程不存在'})
     except Exception as e:
@@ -476,7 +521,7 @@ def get_classroom_history_stats(request):
         course = Course.objects.get(id=course_id)
         classrooms = Classroom.objects.filter(course=course, is_active=False).order_by('-end_time')
         
-        result = []
+        res = []
         for c in classrooms:
             tasks = Task.objects.filter(classroom=c)
             task_ids = list(tasks.values_list('id', flat=True))
@@ -492,10 +537,10 @@ def get_classroom_history_stats(request):
             course_students = CourseStudent.objects.filter(course=course).count()
             participation_rate = round(participation / course_students * 100) if course_students > 0 else 0
             
-            result.append({
+            res.append({
                 'id': c.id,
                 'name': c.name,
-                'time': c.end_time.astimezone().strftime('%Y-%m-%d %H:%M') if c.end_time else c.create_time.astimezone().strftime('%Y-%m-%d %H:%M'),
+                'time': format_datetime(c.end_time) if c.end_time else format_datetime(c.create_time),
                 'task_count': tasks.count(),
                 'participation': participation_rate,
                 'accuracy': accuracy
@@ -504,7 +549,7 @@ def get_classroom_history_stats(request):
         return JsonResponse({
             'code': 1,
             'course_name': course.name,
-            'classrooms': result
+            'classrooms': res
         })
     except Course.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '课程不存在'})
@@ -554,7 +599,7 @@ def get_classroom_overview(request):
         return JsonResponse({
             'code': 1,
             'classroom_name': classroom.name,
-            'classroom_time': classroom.create_time.astimezone().strftime('%Y-%m-%d %H:%M'),
+            'classroom_time': format_datetime(classroom.create_time),
             'overview': {
                 'taskCount': tasks.count(),
                 'participantCount': participant_count,
@@ -828,14 +873,14 @@ def get_course_total_rank(request):
 
 @csrf_exempt
 def get_teacher_student_profile(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     course_id = request.GET.get('course_id')
     
-    if not username or not course_id:
+    if not user or not course_id:
         return JsonResponse({'code': 0, 'msg': '缺少参数'})
     
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         course = Course.objects.get(id=course_id)
         
         classrooms = Classroom.objects.filter(course=course)
@@ -869,7 +914,7 @@ def get_teacher_student_profile(request):
                 classroom_records[cid] = {
                     'classroomId': cid,
                     'classroomName': data['classroom'].name if data['classroom'] else '未知课堂',
-                    'time': data['classroom'].create_time.astimezone().strftime('%Y-%m-%d %H:%M') if data['classroom'] else '',
+                    'time': format_datetime(data['classroom'].create_time) if data['classroom'] else '',
                     'answeredCount': 0,
                     'correctCount': 0
                 }
@@ -913,13 +958,13 @@ def get_teacher_student_profile(request):
 
 @csrf_exempt
 def get_student_analysis(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     
-    if not username:
+    if not user:
         return JsonResponse({'code': 0, 'msg': '缺少参数'})
     
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         
         course_students = CourseStudent.objects.filter(student=student)
         course_ids = list(course_students.values_list('course_id', flat=True))
@@ -930,22 +975,26 @@ def get_student_analysis(request):
         classrooms = Classroom.objects.filter(course_id__in=course_ids)
         total_classrooms = classrooms.count()
         
-        tasks = Task.objects.filter(course_id__in=course_ids)
+        tasks = Task.objects.filter(course_id__in=course_ids).prefetch_related('classroom')
         task_ids = list(tasks.values_list('id', flat=True))
         
-        records = AnswerRecord.objects.filter(student=student, task_id__in=task_ids)
+        records = AnswerRecord.objects.filter(student=student, task_id__in=task_ids).prefetch_related('task__classroom')
         total_questions = records.count()
         correct_count = records.filter(is_correct=True).count()
         accuracy = round(correct_count / total_questions * 100) if total_questions > 0 else 0
         
+        course_records = records.values('task__course_id').annotate(
+            total=Count('id'),
+            correct=Count('id', filter=Q(is_correct=True))
+        )
+        course_record_dict = {cr['task__course_id']: cr for cr in course_records}
+        
         course_stats = []
-        for cs in course_students:
+        for cs in course_students.select_related('course__teacher'):
             course = cs.course
-            course_tasks = Task.objects.filter(course=course)
-            course_task_ids = list(course_tasks.values_list('id', flat=True))
-            course_records = records.filter(task_id__in=course_task_ids)
-            course_total = course_records.count()
-            course_correct = course_records.filter(is_correct=True).count()
+            cr = course_record_dict.get(course.id, {'total': 0, 'correct': 0})
+            course_total = cr['total']
+            course_correct = cr['correct']
             course_accuracy = round(course_correct / course_total * 100) if course_total > 0 else 0
             course_stats.append({
                 'course_id': course.id,
@@ -972,8 +1021,8 @@ def get_student_analysis(request):
                     classroom_records[cid]['correct'] += 1
         
         trend = []
-        sorted_classrooms = sorted(classroom_records.values(), key=lambda x: x['classroom'].create_time, reverse=True)[:5]
-        for cr in reversed(sorted_classrooms):
+        sorted_classrooms = sorted(classroom_records.values(), key=lambda x: x['classroom'].create_time, reverse=False)[:5]
+        for cr in sorted_classrooms:
             cr_accuracy = round(cr['correct'] / cr['total'] * 100) if cr['total'] > 0 else 0
             trend.append({
                 'label': cr['classroom'].name[:4] if len(cr['classroom'].name) > 4 else cr['classroom'].name,
@@ -1000,7 +1049,7 @@ def get_student_analysis(request):
                 'id': tr['task'].id,
                 'task_title': tr['task'].title,
                 'course_name': tr['task'].course.name if tr['task'].course else '未知',
-                'create_time': tr['task'].create_time.astimezone().strftime('%m-%d %H:%M'),
+                'create_time': format_datetime(tr['task'].create_time, '%m-%d %H:%M'),
                 'score': score
             })
         
@@ -1039,13 +1088,13 @@ def remove_course_student(request):
 @csrf_exempt
 def join_course(request):
     code = request.GET.get('code', '').strip().upper()
-    username = request.GET.get('username', '').strip()
+    user = request.GET.get('user', '').strip()
 
-    if not code or not username:
+    if not code or not user:
         return JsonResponse({'code': 0, 'msg': '请输入课程码'})
 
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         course = Course.objects.get(code=code)
 
         if CourseStudent.objects.filter(course=course, student=student).exists():
@@ -1068,22 +1117,23 @@ def join_course(request):
 
 @csrf_exempt
 def get_student_courses(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     try:
-        student = User.objects.get(username=username, role=2)
-        course_students = CourseStudent.objects.filter(student=student).select_related('course', 'course__teacher')
+        student = User.objects.get(username=user, role=2)
+        course_students = CourseStudent.objects.filter(student=student).select_related('course', 'course__teacher').annotate(
+            task_count=Count('course__task')
+        )
         result = []
         for cs in course_students:
             course = cs.course
-            task_count = Task.objects.filter(course=course).count()
             result.append({
                 'id': course.id,
                 'name': course.name,
                 'code': course.code,
                 'semester': course.semester,
                 'teacher_name': course.teacher.name,
-                'task_count': task_count,
-                'join_time': cs.join_time.astimezone().strftime('%Y-%m-%d %H:%M')
+                'task_count': cs.task_count,
+                'join_time': format_datetime(cs.join_time)
             })
         return JsonResponse({'code': 1, 'data': result})
     except User.DoesNotExist:
@@ -1095,13 +1145,13 @@ def get_student_courses(request):
 @csrf_exempt
 def exit_course(request):
     course_id = request.GET.get('course_id')
-    username = request.GET.get('username')
+    user = request.GET.get('user')
 
-    if not course_id or not username:
+    if not course_id or not user:
         return JsonResponse({'code': 0, 'msg': '缺少参数'})
 
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         CourseStudent.objects.filter(course_id=course_id, student=student).delete()
         return JsonResponse({'code': 1, 'msg': '退出成功'})
     except Exception as e:
@@ -1112,16 +1162,16 @@ def exit_course(request):
 def create_task(request):
     title = request.GET.get('title')
     description = request.GET.get('desc')
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     course_id = request.GET.get('course_id')
     question_ids = request.GET.get('question_ids')
     duration = request.GET.get('duration', 10)
 
-    if not (title and username and question_ids and course_id):
+    if not (title and user and question_ids and course_id):
         return JsonResponse({'code': 0, 'msg': '任务名称、课程、题目不能为空'})
 
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         course = Course.objects.get(id=course_id, teacher=teacher)
         end_time = timezone.now() + timezone.timedelta(minutes=int(duration))
         task = Task.objects.create(
@@ -1146,11 +1196,11 @@ def create_task(request):
 
 @csrf_exempt
 def get_teacher_tasks(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     course_id = request.GET.get('course_id', '')
 
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         tasks = Task.objects.filter(create_by=teacher)
         if course_id:
             tasks = tasks.filter(course_id=course_id)
@@ -1163,7 +1213,7 @@ def get_teacher_tasks(request):
         data = []
         for t in tasks:
             status_text = '已结束' if t.status == 2 else '进行中'
-            create_time_str = t.create_time.astimezone().strftime('%Y-%m-%d %H:%M') if t.create_time else '无'
+            create_time_str = format_datetime(t.create_time) if t.create_time else '无'
             data.append({
                 'id': t.id,
                 'title': t.title,
@@ -1180,11 +1230,11 @@ def get_teacher_tasks(request):
 
 @csrf_exempt
 def get_student_tasks(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     course_id = request.GET.get('course_id', '')
 
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
 
         if course_id:
             course_student = CourseStudent.objects.filter(student=student, course_id=course_id).first()
@@ -1213,7 +1263,7 @@ def get_student_tasks(request):
                 'answered_count': answered_count,
                 'total_questions': total_questions,
                 'remaining_seconds': remaining_seconds,
-                'end_time': t.end_time.astimezone().strftime('%Y-%m-%d %H:%M:%S') if t.end_time else ''
+                'end_time': format_datetime(t.end_time, '%Y-%m-%d %H:%M:%S') if t.end_time else ''
             })
         return JsonResponse({'code': 1, 'data': data})
     except User.DoesNotExist:
@@ -1224,14 +1274,14 @@ def get_student_tasks(request):
 
 @csrf_exempt
 def get_student_task_status(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     task_ids_str = request.GET.get('task_ids', '')
     
     if not task_ids_str:
         return JsonResponse({'code': 1, 'data': []})
     
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         task_ids = [int(tid) for tid in task_ids_str.split(',') if tid.strip()]
         
         data = []
@@ -1278,7 +1328,7 @@ def get_task_questions(request):
             'code': 1,
             'data': question_list,
             'remaining_seconds': remaining_seconds,
-            'end_time': task.end_time.astimezone().strftime('%Y-%m-%d %H:%M:%S') if task.end_time else ''
+            'end_time': format_datetime(task.end_time, '%Y-%m-%d %H:%M:%S') if task.end_time else ''
         })
     except Task.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '任务不存在'})
@@ -1290,16 +1340,16 @@ def get_task_questions(request):
 def submit_answer(request):
     task_id = request.GET.get('task_id')
     q_id = request.GET.get('q_id')
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     student_answer = request.GET.get('answer')
 
     if not task_id or not task_id.isdigit() or not q_id or not q_id.isdigit():
         return JsonResponse({'code': 0, 'msg': '任务ID或题目ID无效'})
-    if not username or not student_answer:
+    if not user or not student_answer:
         return JsonResponse({'code': 0, 'msg': '用户名或答案不能为空'})
 
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         task = Task.objects.get(id=int(task_id))
         question = Question.objects.get(id=int(q_id))
 
@@ -1340,7 +1390,7 @@ def task_statistics(request):
         # 获取课程的学生总数（应参与人数）
         total_students = CourseStudent.objects.filter(course=task.course).count()
         questions = task.questions.filter(q_type__in=[1,3])
-        result = []
+        res = []
         for q in questions:
             records = AnswerRecord.objects.filter(task=task, question=q)
             total = records.count()
@@ -1351,7 +1401,7 @@ def task_statistics(request):
             for opt in ['A','B','C','D']:
                 cnt = records.filter(student_answer=opt).count()
                 if cnt>0: opts[opt] = cnt
-            result.append({
+            res.append({
                 'title': q.title,
                 'q_type': int(q.q_type),
                 'answer': q.answer,
@@ -1361,7 +1411,7 @@ def task_statistics(request):
                 'correct': correct,
                 'options': opts
             })
-        return JsonResponse({'code':1, 'data':result})
+        return JsonResponse({'code':1, 'data':res})
     except:
         return JsonResponse({'code':0, 'msg':'错误'})
 
@@ -1374,11 +1424,11 @@ def get_essay_answers(request):
     try:
         task = Task.objects.get(id=task_id)
         essay_questions = task.questions.filter(q_type=5)
-        result = []
+        res = []
         for q in essay_questions:
             records = AnswerRecord.objects.filter(task=task, question=q, is_correct__isnull=True)
             for r in records:
-                result.append({
+                res.append({
                     'record_id': r.id,
                     'question_id': q.id,
                     'question_title': q.title,
@@ -1386,7 +1436,7 @@ def get_essay_answers(request):
                     'student_name': r.student.username,
                     'student_answer': r.student_answer
                 })
-        return JsonResponse({'code': 1, 'data': result, 'total': len(result)})
+        return JsonResponse({'code': 1, 'data': res, 'total': len(res)})
     except Task.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '任务不存在'})
     except Exception as e:
@@ -1412,33 +1462,33 @@ def grade_essay(request):
 
 @csrf_exempt
 def get_student_answered_tasks(request):
-    username = request.GET.get('username')
-    if not username:
+    user = request.GET.get('user')
+    if not user:
         return JsonResponse({'code': 0, 'msg': '缺少用户名'})
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         records = AnswerRecord.objects.filter(student=student).values_list('task_id', flat=True)
         task_ids = list(set(records))
         tasks = Task.objects.filter(id__in=task_ids).order_by('-create_time')
-        result = []
+        res = []
         for task in tasks:
             task_records = AnswerRecord.objects.filter(task=task, student=student)
             total_questions = task.questions.count()
             answered_count = task_records.count()
             correct_count = task_records.filter(is_correct=True).count()
             pending_count = task_records.filter(is_correct__isnull=True).count()
-            result.append({
+            res.append({
                 'task_id': task.id,
                 'title': task.title,
                 'course_name': task.course.name,
                 'description': task.description or '',
-                'create_time': task.create_time.astimezone().strftime('%Y-%m-%d %H:%M') if task.create_time else '',
+                'create_time': format_datetime(task.create_time) if task.create_time else '',
                 'total_questions': total_questions,
                 'answered_count': answered_count,
                 'correct_count': correct_count,
                 'pending_count': pending_count
             })
-        return JsonResponse({'code': 1, 'data': result})
+        return JsonResponse({'code': 1, 'data': res})
     except User.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '学生不存在'})
     except Exception as e:
@@ -1447,21 +1497,21 @@ def get_student_answered_tasks(request):
 
 @csrf_exempt
 def get_student_task_detail(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     task_id = request.GET.get('task_id')
-    if not username or not task_id:
+    if not user or not task_id:
         return JsonResponse({'code': 0, 'msg': '缺少参数'})
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         task = Task.objects.get(id=task_id)
         questions = task.questions.all()
         records = AnswerRecord.objects.filter(task=task, student=student)
         record_map = {r.question_id: r for r in records}
         type_map = {1: '单选题', 2: '多选题', 3: '判断题', 4: '填空题', 5: '简答题'}
-        result = []
+        res = []
         for q in questions:
             record = record_map.get(q.id)
-            result.append({
+            res.append({
                 'question_id': q.id,
                 'title': q.title,
                 'q_type': type_map.get(int(q.q_type), '未知题型'),
@@ -1471,7 +1521,7 @@ def get_student_task_detail(request):
                 'is_correct': record.is_correct if record else None,
                 'is_answered': record is not None
             })
-        return JsonResponse({'code': 1, 'data': result, 'task_title': task.title})
+        return JsonResponse({'code': 1, 'data': res, 'task_title': task.title})
     except User.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '学生不存在'})
     except Task.DoesNotExist:
@@ -1514,13 +1564,13 @@ def upload_image(request):
 def create_classroom(request):
     course_id = request.GET.get('course_id')
     name = request.GET.get('name', '').strip()
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     
-    if not course_id or not username:
+    if not course_id or not user:
         return JsonResponse({'code': 0, 'msg': '缺少参数'})
     
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         course = Course.objects.get(id=course_id, teacher=teacher)
         
         active_classroom = Classroom.objects.filter(course=course, is_active=True).first()
@@ -1567,7 +1617,7 @@ def get_active_classroom(request):
                 'classroom': {
                     'id': classroom.id,
                     'name': classroom.name,
-                    'create_time': classroom.create_time.astimezone().strftime('%Y-%m-%d %H:%M'),
+                    'create_time': format_datetime(classroom.create_time),
                     'task_count': task_count
                 }
             })
@@ -1582,13 +1632,13 @@ def get_active_classroom(request):
 @csrf_exempt
 def end_classroom(request):
     classroom_id = request.GET.get('classroom_id')
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     
-    if not classroom_id or not username:
+    if not classroom_id or not user:
         return JsonResponse({'code': 0, 'msg': '缺少参数'})
     
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         classroom = Classroom.objects.get(id=classroom_id)
         
         if classroom.course.teacher != teacher:
@@ -1634,7 +1684,7 @@ def get_classroom_detail(request):
                 'id': t.id,
                 'title': t.title,
                 'status': status_text,
-                'create_time': t.create_time.astimezone().strftime('%Y-%m-%d %H:%M'),
+                'create_time': format_datetime(t.create_time),
                 'question_count': t.questions.count(),
                 'has_essay': has_essay,
                 'remaining_seconds': remaining_seconds
@@ -1646,8 +1696,8 @@ def get_classroom_detail(request):
                 'id': classroom.id,
                 'name': classroom.name,
                 'is_active': classroom.is_active,
-                'create_time': classroom.create_time.astimezone().strftime('%Y-%m-%d %H:%M'),
-                'end_time': classroom.end_time.astimezone().strftime('%Y-%m-%d %H:%M') if classroom.end_time else '',
+                'create_time': format_datetime(classroom.create_time),
+                'end_time': format_datetime(classroom.end_time) if classroom.end_time else '',
                 'course_name': classroom.course.name
             },
             'tasks': task_list
@@ -1668,18 +1718,18 @@ def get_classroom_history(request):
         course = Course.objects.get(id=course_id)
         classrooms = Classroom.objects.filter(course=course, is_active=False).order_by('-end_time')
         
-        result = []
+        res = []
         for c in classrooms:
             task_count = Task.objects.filter(classroom=c).count()
-            result.append({
+            res.append({
                 'id': c.id,
                 'name': c.name,
-                'create_time': c.create_time.astimezone().strftime('%Y-%m-%d %H:%M'),
-                'end_time': c.end_time.astimezone().strftime('%Y-%m-%d %H:%M') if c.end_time else '',
+                'create_time': format_datetime(c.create_time),
+                'end_time': format_datetime(c.end_time) if c.end_time else '',
                 'task_count': task_count
             })
         
-        return JsonResponse({'code': 1, 'data': result})
+        return JsonResponse({'code': 1, 'data': res})
     except Course.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '课程不存在'})
     except Exception as e:
@@ -1690,16 +1740,16 @@ def get_classroom_history(request):
 def create_task_in_classroom(request):
     title = request.GET.get('title')
     description = request.GET.get('desc')
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     classroom_id = request.GET.get('classroom_id')
     question_ids = request.GET.get('question_ids')
     duration = request.GET.get('duration', 10)
 
-    if not (title and username and question_ids and classroom_id):
+    if not (title and user and question_ids and classroom_id):
         return JsonResponse({'code': 0, 'msg': '任务名称、课堂、题目不能为空'})
 
     try:
-        teacher = User.objects.get(username=username, role=1)
+        teacher = User.objects.get(username=user, role=1)
         classroom = Classroom.objects.get(id=classroom_id)
         
         if classroom.course.teacher != teacher:
@@ -1747,7 +1797,7 @@ def get_student_classroom(request):
                 task_list.append({
                     'id': t.id,
                     'title': t.title,
-                    'end_time': t.end_time.astimezone().strftime('%Y-%m-%d %H:%M:%S') if t.end_time else ''
+                    'end_time': format_datetime(t.end_time, '%Y-%m-%d %H:%M:%S') if t.end_time else ''
                 })
             return JsonResponse({
                 'code': 1,
@@ -1768,14 +1818,14 @@ def get_student_classroom(request):
 
 @csrf_exempt
 def get_student_performance(request):
-    username = request.GET.get('username')
+    user = request.GET.get('user')
     course_id = request.GET.get('course_id')
     
-    if not username or not course_id:
+    if not user or not course_id:
         return JsonResponse({'code': 0, 'msg': '缺少参数'})
     
     try:
-        student = User.objects.get(username=username, role=2)
+        student = User.objects.get(username=user, role=2)
         course = Course.objects.get(id=course_id)
         
         tasks = Task.objects.filter(course=course)
@@ -1800,7 +1850,7 @@ def get_student_performance(request):
             record_list.append({
                 'id': tid,
                 'task_title': data['task'].title,
-                'create_time': data['task'].create_time.astimezone().strftime('%Y-%m-%d %H:%M'),
+                'create_time': format_datetime(data['task'].create_time),
                 'score': score
             })
         

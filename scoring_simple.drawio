@@ -1,0 +1,170 @@
+<mxfile host="app.diagrams.net" agent="Trae">
+  <diagram name="Scoring Algorithm" id="scoring-flow">
+    <mxGraphModel dx="1076" dy="594" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="1000" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-2" edge="1" parent="1" source="s0" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s3" value="">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="s0" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=15;" value="开始" vertex="1">
+          <mxGeometry height="40" width="80" x="560" y="270" as="geometry" />
+        </mxCell>
+        <mxCell id="s3" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;" value="通过任务ID从而获取任务的所有答题记录" vertex="1">
+          <mxGeometry height="40" width="160" x="520" y="330" as="geometry" />
+        </mxCell>
+        <mxCell id="s4" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=17;" value="遍历每一道题" vertex="1">
+          <mxGeometry height="40" width="120" x="540" y="400" as="geometry" />
+        </mxCell>
+        <mxCell id="s5" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;" value="获取该题的AnswerRecord并计算 total_answers" vertex="1">
+          <mxGeometry height="40" width="160" x="520" y="470" as="geometry" />
+        </mxCell>
+        <mxCell id="s7" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=13;" value="total_answers &amp;gt; 0?" vertex="1">
+          <mxGeometry height="60" width="120" x="540" y="530" as="geometry" />
+        </mxCell>
+        <mxCell id="skip1" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=15;" value="跳过" vertex="1">
+          <mxGeometry height="30" width="60" x="400" y="625" as="geometry" />
+        </mxCell>
+        <mxCell id="s8" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;" value="计算 correct_answers" vertex="1">
+          <mxGeometry height="40" width="160" x="520" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="s9" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=13;" value="correct_answers &amp;gt; 0?" vertex="1">
+          <mxGeometry height="60" width="120" x="540" y="710" as="geometry" />
+        </mxCell>
+        <mxCell id="s10" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=13;" value="accuracy = correct/total，score = round( (1-accuracy)*10 )" vertex="1">
+          <mxGeometry height="40" width="160" x="520" y="810" as="geometry" />
+        </mxCell>
+        <mxCell id="s12" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=15;" value="为答对的学生更新TaskScore" vertex="1">
+          <mxGeometry height="40" width="200" x="500" y="890" as="geometry" />
+        </mxCell>
+        <mxCell id="s13" parent="1" style="rhombus;whiteSpace=wrap;html=1;fontSize=13;" value="还有未处理的题?" vertex="1">
+          <mxGeometry height="60" width="120" x="540" y="1000" as="geometry" />
+        </mxCell>
+        <mxCell id="s14" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=15;" value="汇总计算总分并排序" vertex="1">
+          <mxGeometry height="40" width="140" x="530" y="1100" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" parent="1" style="ellipse;whiteSpace=wrap;html=1;fontSize=13;" value="结束" vertex="1">
+          <mxGeometry height="40" width="80" x="560" y="1170" as="geometry" />
+        </mxCell>
+        <mxCell id="e03" edge="1" parent="1" source="s3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s4">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e04" edge="1" parent="1" source="s4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s5">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e06" edge="1" parent="1" source="s5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=13;" target="s7">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600.0000000000002" y="490" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e07" edge="1" parent="1" source="1NHX7GT9NAvfL47V1_Lj-3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="skip1">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="560" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e08" edge="1" parent="1" source="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s8">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e09" edge="1" parent="1" source="s8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s9">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e10" edge="1" parent="1" source="1NHX7GT9NAvfL47V1_Lj-7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="skip2">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="740" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e11" edge="1" parent="1" source="s9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e13" edge="1" parent="1" source="s10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=13;" target="s12">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600.0000000000002" y="880" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e14" edge="1" parent="1" source="s12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s13">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e15" edge="1" parent="1" source="s13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s14">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e17" edge="1" parent="1" source="s14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0.5;exitY=1;exitDx=0;exitDy=0;fontSize=13;" target="e1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="600.0000000000002" y="1210" as="sourcePoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-loop" edge="1" parent="1" source="s13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s4">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="300" y="1030" />
+              <mxPoint x="300" y="420" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-skip1" edge="1" parent="1" source="skip2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="970" />
+              <mxPoint x="600" y="970" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-skip2" edge="1" parent="1" source="skip2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="s13">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="970" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-1" edge="1" parent="1" source="skip1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="skip2" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="430" y="750" />
+              <mxPoint x="430" y="750" />
+            </Array>
+            <mxPoint x="430" y="580" as="sourcePoint" />
+            <mxPoint x="600" y="1000" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="skip2" parent="1" style="rounded=0;whiteSpace=wrap;html=1;fontSize=15;" value="跳过" vertex="1">
+          <mxGeometry height="30" width="60" x="400" y="800" as="geometry" />
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-4" edge="1" parent="1" source="s7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="1NHX7GT9NAvfL47V1_Lj-3" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="560" y="550" as="sourcePoint" />
+            <mxPoint x="430" y="625" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-3" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=13;" value="否" vertex="1">
+          <mxGeometry height="30" width="60" x="450" y="545" as="geometry" />
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-5" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=13;" value="是" vertex="1">
+          <mxGeometry height="30" width="60" x="580" y="590" as="geometry" />
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-8" edge="1" parent="1" source="s9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;fontSize=13;" target="1NHX7GT9NAvfL47V1_Lj-7" value="">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points" />
+            <mxPoint x="540" y="740" as="sourcePoint" />
+            <mxPoint x="430" y="800" as="targetPoint" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-7" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=13;" value="否" vertex="1">
+          <mxGeometry height="30" width="60" x="450" y="720" as="geometry" />
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-9" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=13;" value="是" vertex="1">
+          <mxGeometry height="30" width="60" x="580" y="780" as="geometry" />
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-10" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=13;" value="是" vertex="1">
+          <mxGeometry height="30" width="60" x="420" y="1030" as="geometry" />
+        </mxCell>
+        <mxCell id="1NHX7GT9NAvfL47V1_Lj-14" parent="1" style="text;html=1;whiteSpace=wrap;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;rounded=0;fontSize=13;" value="否" vertex="1">
+          <mxGeometry height="30" width="60" x="600" y="1060" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
