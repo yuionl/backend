@@ -377,7 +377,7 @@ def get_teacher_courses(request):
         teacher = User.objects.get(username=username, role=1)
         courses = Course.objects.filter(teacher=teacher).order_by('-create_time').annotate(
             student_count=Count('student_records'),
-            task_count=Count('task')
+            task_count=Count('tasks')
         )
         
         active_classrooms = Classroom.objects.filter(
