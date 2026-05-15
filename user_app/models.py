@@ -100,7 +100,7 @@ class AnswerRecord(models.Model):
     task = models.ForeignKey(Task, on_delete=models.CASCADE, verbose_name='所属任务')
     student = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name='答题学生')
     question = models.ForeignKey(Question, on_delete=models.CASCADE, verbose_name='答题题目')
-    student_answer = models.CharField(max_length=200, verbose_name='学生答案')
+    student_answer = models.TextField(verbose_name='学生答案')
     is_correct = models.BooleanField(null=True, blank=True, default=None, verbose_name='是否正确（None表示待批改）')
 
     def __str__(self):
