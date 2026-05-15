@@ -9,23 +9,16 @@ from .models import User, Question, Task, AnswerRecord, Course, CourseStudent, C
 # 解析前端请求参数，兼容GET和POST
 def get_request_data(request):
     if request.method == 'POST':
-        content_type = request.content_type or ''
-        print(f"POST content_type: {content_type}")
         try:
             body = request.body.decode('utf-8')
-            print(f"POST body length: {len(body)}")
             if body:
                 # 尝试解析JSON
                 try:
-                    data = json.loads(body)
-                    print(f"Parsed JSON data keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
-                    return data
-                except json.JSONDecodeError as e:
-                    print(f"JSON decode error: {str(e)}")
+                    return json.loads(body)
+                except json.JSONDecodeError:
                     # 如果JSON解析失败，尝试解析表单数据
                     pass
-        except Exception as e:
-            print(f"Error reading body: {str(e)}")
+        except:
             pass
         return request.POST
     return request.GET
@@ -187,13 +180,8 @@ def login(request):
 # 教师出题，录入题库
 @csrf_exempt
 def create_question(request):
-    import traceback
     try:
         data = get_request_data(request)
-        # 调试信息
-        print(f"Request method: {request.method}")
-        print(f"Content-Type: {request.content_type}")
-        print(f"Data received: {type(data)}")
         
         # 使用 str() 转换，处理 JSON 中的整数类型
         title = str(data.get('title', '')).strip()
@@ -203,10 +191,6 @@ def create_question(request):
         options = str(data.get('options', '')).strip()
         answer = str(data.get('answer', '')).strip()
         create_by = str(data.get('username', '')).strip()
-
-        print(f"Title: {title[:50] if title else 'None'}")
-        print(f"q_type: {q_type}, level: {level}, course: {course}")
-        print(f"Username: {create_by}")
 
         if not q_type:
             q_type = str(data.get('type', '')).strip()
@@ -236,14 +220,10 @@ def create_question(request):
         )
         return JsonResponse({'code': 1, 'msg': '题目创建成功'})
     except ValueError as e:
-        print(f"ValueError: {str(e)}")
         return JsonResponse({'code': 0, 'msg': f'数据格式错误：{str(e)}'})
     except User.DoesNotExist:
-        print(f"UserDoesNotExist: username={create_by}")
         return JsonResponse({'code': 0, 'msg': '创建人不是教师或不存在'})
     except Exception as e:
-        print(f"Exception: {str(e)}")
-        print(f"Traceback: {traceback.format_exc()}")
         return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)}'})
 
 
