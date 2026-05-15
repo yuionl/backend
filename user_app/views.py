@@ -217,7 +217,7 @@ def create_question(request):
     except User.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '创建人不是教师或不存在'})
     except Exception as e:
-        return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)'})
+        return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)}'})
 
 
 @csrf_exempt
