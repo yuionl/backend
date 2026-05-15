@@ -13,5 +13,13 @@ os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'backend.settings')
 import django
 django.setup()
 
+# Auto-run database migrations on startup
+from django.core.management import call_command
+try:
+    call_command('migrate')
+    print("Database migrations applied successfully!")
+except Exception as e:
+    print(f"Error applying migrations: {e}")
+
 # Import the WSGI application
 from backend.wsgi import application
