@@ -175,16 +175,17 @@ def login(request):
 # 教师出题，录入题库
 @csrf_exempt
 def create_question(request):
-    title = request.GET.get('title', '').strip()
-    q_type = request.GET.get('q_type', '').strip()
-    level = request.GET.get('level', '').strip()
-    course = request.GET.get('course', '').strip()
-    options = request.GET.get('options', '').strip()
-    answer = request.GET.get('answer', '').strip()
-    create_by = request.GET.get('username', '').strip()
+    data = get_request_data(request)
+    title = data.get('title', '').strip()
+    q_type = data.get('q_type', '').strip()
+    level = data.get('level', '').strip()
+    course = data.get('course', '').strip()
+    options = data.get('options', '').strip()
+    answer = data.get('answer', '').strip()
+    create_by = data.get('username', '').strip()
 
     if not q_type:
-        q_type = request.GET.get('type', '').strip()
+        q_type = data.get('type', '').strip()
 
     missing_fields = []
     if not title: missing_fields.append('题干')
@@ -216,7 +217,7 @@ def create_question(request):
     except User.DoesNotExist:
         return JsonResponse({'code': 0, 'msg': '创建人不是教师或不存在'})
     except Exception as e:
-        return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)}'})
+        return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)'})
 
 
 @csrf_exempt
