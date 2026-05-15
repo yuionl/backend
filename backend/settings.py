@@ -9,7 +9,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = "django-insecure-gs)gm%8ixrp2+(4dng6u*w@skmuk_t0k0tj$mrg+rm4%%#+)=%"
 
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['127.0.0.1', 'localhost', '.vercel.app']
 
@@ -54,10 +54,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "backend.wsgi.application"
 
-# 数据库配置
+# 数据库配置 - 强制使用 Neon PostgreSQL 云数据库
 import os
 
-# 强制使用 PostgreSQL（Vercel 环境）
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -68,7 +67,9 @@ DATABASES = {
         "PORT": "5432",
         "OPTIONS": {
             "sslmode": "require",
+            "connect_timeout": 30,  # 延长超时到30秒，确保网络能连上
         },
+        "CONN_MAX_AGE": 0,
     }
 }
 

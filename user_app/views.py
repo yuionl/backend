@@ -6,6 +6,7 @@ from django.views.decorators.csrf import csrf_exempt
 from .models import User, Question, Task, AnswerRecord, Course, CourseStudent, Classroom, TaskScore
 
 
+# 解析前端请求参数，兼容GET和POST
 def get_request_data(request):
     if request.method == 'POST':
         try:
@@ -16,6 +17,7 @@ def get_request_data(request):
             pass
         return request.POST
     return request.GET
+    """从 HTTP 请求中提取参数数据，并根据请求方法和数据格式，返回一个字典"""
 
 def format_datetime(dt, fmt='%Y-%m-%d %H:%M'):
     """安全地格式化 datetime 对象，处理带时区和不带时区的情况"""
@@ -26,6 +28,7 @@ def format_datetime(dt, fmt='%Y-%m-%d %H:%M'):
     return dt.strftime(fmt)
 
 
+# 首页，随便返回个你好
 def index(request):
     html_content = """
     <!DOCTYPE html>
@@ -93,6 +96,7 @@ def debug_info(request):
         'questions_count': questions_count
     })
 
+# 修复数据库序列，防止id冲突
 @csrf_exempt
 def fix_sequences(request):
     from django.db import connection
@@ -146,6 +150,7 @@ def fix_sequences(request):
     
     return JsonResponse({'results': results})
 
+# 登录验证，验证用户名密码
 @csrf_exempt
 def login(request):
     data = get_request_data(request)
@@ -167,6 +172,7 @@ def login(request):
         })
 
 
+# 教师出题，录入题库
 @csrf_exempt
 def create_question(request):
     title = request.GET.get('title', '').strip()
@@ -279,6 +285,7 @@ def delete_questions(request):
         return JsonResponse({'code': 0, 'msg': f'删除失败：{str(e)}'})
 
 
+# 查看单道题目的详情
 @csrf_exempt
 def get_question_detail(request):
     question_id = request.GET.get('question_id')
@@ -339,6 +346,7 @@ def update_question(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 教师开课，创建新课程
 @csrf_exempt
 def create_course(request):
     data = get_request_data(request)
@@ -408,6 +416,7 @@ def get_teacher_courses(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 查看某课程的所有学生
 @csrf_exempt
 def get_course_students(request):
     course_id = request.GET.get('course_id')
@@ -587,6 +596,7 @@ def get_classroom_overview(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 单题分析，返回扇形图需要的数据
 @csrf_exempt
 def get_question_analysis(request):
     classroom_id = request.GET.get('classroom_id')
@@ -700,6 +710,7 @@ def get_student_rank(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 算成绩的，根据正确率给分
 def calculate_task_scores(task_id):
     task = Task.objects.get(id=task_id)
     questions = task.questions.all()
@@ -844,6 +855,7 @@ def get_course_total_rank(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 教师查看某个学生的详细答题情况
 @csrf_exempt
 def get_teacher_student_profile(request):
     username = request.GET.get('username')
@@ -929,6 +941,7 @@ def get_teacher_student_profile(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 学生查看自己的答题分析，统计和趋势
 @csrf_exempt
 def get_student_analysis(request):
     username = request.GET.get('username')
@@ -1088,6 +1101,7 @@ def join_course(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 学生获取自己加入的课程列表
 @csrf_exempt
 def get_student_courses(request):
     username = request.GET.get('username')
@@ -1131,6 +1145,7 @@ def exit_course(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 创建答题任务，关联题目
 @csrf_exempt
 def create_task(request):
     title = request.GET.get('title')
@@ -1167,6 +1182,7 @@ def create_task(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 教师查看自己发布的任务列表
 @csrf_exempt
 def get_teacher_tasks(request):
     username = request.GET.get('username')
@@ -1201,6 +1217,7 @@ def get_teacher_tasks(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 学生获取待完成的任务列表
 @csrf_exempt
 def get_student_tasks(request):
     username = request.GET.get('username')
@@ -1309,6 +1326,7 @@ def get_task_questions(request):
         return JsonResponse({'code': 0, 'msg': f'获取题目失败：{str(e)}'})
 
 
+# 学生提交答案，自动批改客观题
 @csrf_exempt
 def submit_answer(request):
     task_id = request.GET.get('task_id')
@@ -1389,6 +1407,7 @@ def task_statistics(request):
         return JsonResponse({'code':0, 'msg':'错误'})
 
 
+# 获取简答题待批改列表
 @csrf_exempt
 def get_essay_answers(request):
     task_id = request.GET.get('task_id')
@@ -1416,6 +1435,7 @@ def get_essay_answers(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 教师手动批改简答题
 @csrf_exempt
 def grade_essay(request):
     record_id = request.GET.get('record_id')
@@ -1505,34 +1525,99 @@ def get_student_task_detail(request):
 
 import os
 import uuid
+import base64
+import re
 from django.core.files.storage import default_storage
 
 @csrf_exempt
 def upload_image(request):
     if request.method != 'POST':
         return JsonResponse({'code': 0, 'msg': '仅支持POST请求'})
-    
-    if 'image' not in request.FILES:
-        return JsonResponse({'code': 0, 'msg': '未上传图片'})
-    
-    image = request.FILES['image']
-    
-    allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
-    if image.content_type not in allowed_types:
-        return JsonResponse({'code': 0, 'msg': '不支持的图片格式'})
-    
-    if image.size > 5 * 1024 * 1024:
-        return JsonResponse({'code': 0, 'msg': '图片大小不能超过5MB'})
-    
-    ext = os.path.splitext(image.name)[1]
-    filename = f'question_images/{uuid.uuid4().hex}{ext}'
-    
-    saved_path = default_storage.save(filename, image)
-    url = f'http://127.0.0.1:8000/media/{saved_path}'
-    
-    return JsonResponse({'code': 1, 'msg': '上传成功', 'url': url})
+
+    content_type = request.content_type or ''
+
+    if 'multipart' in content_type:
+        if 'image' not in request.FILES:
+            return JsonResponse({'code': 0, 'msg': '未上传图片'})
+
+        image = request.FILES['image']
+
+        allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+        if image.content_type not in allowed_types:
+            return JsonResponse({'code': 0, 'msg': '不支持的图片格式'})
+
+        if image.size > 5 * 1024 * 1024:
+            return JsonResponse({'code': 0, 'msg': '图片大小不能超过5MB'})
+
+        image_data = image.read()
+    else:
+        try:
+            body = request.body
+            if len(body) > 5 * 1024 * 1024:
+                return JsonResponse({'code': 0, 'msg': '图片大小不能超过5MB'})
+
+            content_type_header = request.content_type or ''
+            boundary_match = re.search(r'boundary=["\']?([^"\'\s;]+)["\']?', content_type_header)
+            if not boundary_match:
+                return JsonResponse({'code': 0, 'msg': '无法解析上传数据'})
+
+            boundary = boundary_match.group(1)
+            if isinstance(boundary, bytes):
+                boundary = boundary.decode('utf-8')
+
+            parts = body.split(f'--{boundary}'.encode())
+            image_data = None
+            content_type_img = 'image/png'
+
+            for part in parts:
+                if b'Content-Type:' in part:
+                    header_end = part.index(b'\r\n\r\n')
+                    part_header = part[:header_end].decode('utf-8', errors='ignore')
+                    if 'image/' in part_header:
+                        image_data = part[header_end + 4:]
+                        type_match = re.search(r'Content-Type:\s*([^\s;]+)', part_header)
+                        if type_match:
+                            content_type_img = type_match.group(1)
+                        break
+
+            if image_data is None:
+                return JsonResponse({'code': 0, 'msg': '未找到图片数据'})
+
+            allowed_types = ['image/jpeg', 'image/png', 'image/gif', 'image/webp']
+            if content_type_img not in allowed_types:
+                return JsonResponse({'code': 0, 'msg': '不支持的图片格式'})
+
+        except Exception as e:
+            return JsonResponse({'code': 0, 'msg': f'解析图片失败：{str(e)}'})
+
+    try:
+        ext_map = {
+            'image/jpeg': '.jpg',
+            'image/png': '.png',
+            'image/gif': '.gif',
+            'image/webp': '.webp'
+        }
+        ext = ext_map.get(content_type_img if 'content_type_img' in dir() else 'image/png', '.png')
+
+        if isinstance(image_data, bytes):
+            img_base64 = base64.b64encode(image_data).decode('utf-8')
+        else:
+            img_base64 = base64.b64encode(image_data.read()).decode('utf-8')
+
+        data_url = f'data:{content_type_img if "content_type_img" in dir() else "image/png"};base64,{img_base64}'
+
+        return JsonResponse({
+            'code': 1,
+            'msg': '上传成功',
+            'url': data_url,
+            'filename': f'{uuid.uuid4().hex}{ext}'
+        })
+
+    except Exception as e:
+        return JsonResponse({'code': 0, 'msg': f'处理图片失败：{str(e)}'})
 
 
+# 创建课堂，开启一节课
 @csrf_exempt
 def create_classroom(request):
     course_id = request.GET.get('course_id')
@@ -1572,6 +1657,7 @@ def create_classroom(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 获取当前进行中的课堂
 @csrf_exempt
 def get_active_classroom(request):
     course_id = request.GET.get('course_id')
@@ -1709,6 +1795,7 @@ def get_classroom_history(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 在课堂内创建答题任务
 @csrf_exempt
 def create_task_in_classroom(request):
     title = request.GET.get('title')
@@ -1753,6 +1840,7 @@ def create_task_in_classroom(request):
         return JsonResponse({'code': 0, 'msg': str(e)})
 
 
+# 学生获取进行中的课堂和任务
 @csrf_exempt
 def get_student_classroom(request):
     course_id = request.GET.get('course_id')
