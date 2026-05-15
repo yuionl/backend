@@ -9,11 +9,23 @@ from .models import User, Question, Task, AnswerRecord, Course, CourseStudent, C
 # 解析前端请求参数，兼容GET和POST
 def get_request_data(request):
     if request.method == 'POST':
+        content_type = request.content_type or ''
+        print(f"POST content_type: {content_type}")
         try:
             body = request.body.decode('utf-8')
+            print(f"POST body length: {len(body)}")
             if body:
-                return json.loads(body)
-        except:
+                # 尝试解析JSON
+                try:
+                    data = json.loads(body)
+                    print(f"Parsed JSON data keys: {list(data.keys()) if isinstance(data, dict) else 'Not a dict'}")
+                    return data
+                except json.JSONDecodeError as e:
+                    print(f"JSON decode error: {str(e)}")
+                    # 如果JSON解析失败，尝试解析表单数据
+                    pass
+        except Exception as e:
+            print(f"Error reading body: {str(e)}")
             pass
         return request.POST
     return request.GET
@@ -175,30 +187,40 @@ def login(request):
 # 教师出题，录入题库
 @csrf_exempt
 def create_question(request):
-    data = get_request_data(request)
-    title = data.get('title', '').strip()
-    q_type = data.get('q_type', '').strip()
-    level = data.get('level', '').strip()
-    course = data.get('course', '').strip()
-    options = data.get('options', '').strip()
-    answer = data.get('answer', '').strip()
-    create_by = data.get('username', '').strip()
-
-    if not q_type:
-        q_type = data.get('type', '').strip()
-
-    missing_fields = []
-    if not title: missing_fields.append('题干')
-    if not q_type: missing_fields.append('题型')
-    if not level: missing_fields.append('难度')
-    if not course: missing_fields.append('课程')
-    if not answer: missing_fields.append('答案')
-    if not create_by: missing_fields.append('创建人')
-
-    if missing_fields:
-        return JsonResponse({'code': 0, 'msg': f'请填写所有必填项：{",".join(missing_fields)}'})
-
+    import traceback
     try:
+        data = get_request_data(request)
+        # 调试信息
+        print(f"Request method: {request.method}")
+        print(f"Content-Type: {request.content_type}")
+        print(f"Data received: {type(data)}")
+        
+        title = data.get('title', '').strip()
+        q_type = data.get('q_type', '').strip()
+        level = data.get('level', '').strip()
+        course = data.get('course', '').strip()
+        options = data.get('options', '').strip()
+        answer = data.get('answer', '').strip()
+        create_by = data.get('username', '').strip()
+
+        print(f"Title: {title[:50] if title else 'None'}")
+        print(f"q_type: {q_type}, level: {level}, course: {course}")
+        print(f"Username: {create_by}")
+
+        if not q_type:
+            q_type = data.get('type', '').strip()
+
+        missing_fields = []
+        if not title: missing_fields.append('题干')
+        if not q_type: missing_fields.append('题型')
+        if not level: missing_fields.append('难度')
+        if not course: missing_fields.append('课程')
+        if not answer: missing_fields.append('答案')
+        if not create_by: missing_fields.append('创建人')
+
+        if missing_fields:
+            return JsonResponse({'code': 0, 'msg': f'请填写所有必填项：{",".join(missing_fields)}'})
+
         q_type = int(q_type)
         level = int(level)
         teacher = User.objects.get(username=create_by, role=1)
@@ -212,11 +234,15 @@ def create_question(request):
             create_by=teacher
         )
         return JsonResponse({'code': 1, 'msg': '题目创建成功'})
-    except ValueError:
-        return JsonResponse({'code': 0, 'msg': '题型/难度必须是数字'})
+    except ValueError as e:
+        print(f"ValueError: {str(e)}")
+        return JsonResponse({'code': 0, 'msg': f'数据格式错误：{str(e)}'})
     except User.DoesNotExist:
+        print(f"UserDoesNotExist: username={create_by}")
         return JsonResponse({'code': 0, 'msg': '创建人不是教师或不存在'})
     except Exception as e:
+        print(f"Exception: {str(e)}")
+        print(f"Traceback: {traceback.format_exc()}")
         return JsonResponse({'code': 0, 'msg': f'创建失败：{str(e)}'})
 
 
