@@ -195,20 +195,21 @@ def create_question(request):
         print(f"Content-Type: {request.content_type}")
         print(f"Data received: {type(data)}")
         
-        title = data.get('title', '').strip()
-        q_type = data.get('q_type', '').strip()
-        level = data.get('level', '').strip()
-        course = data.get('course', '').strip()
-        options = data.get('options', '').strip()
-        answer = data.get('answer', '').strip()
-        create_by = data.get('username', '').strip()
+        # 使用 str() 转换，处理 JSON 中的整数类型
+        title = str(data.get('title', '')).strip()
+        q_type = str(data.get('q_type', '')).strip()
+        level = str(data.get('level', '')).strip()
+        course = str(data.get('course', '')).strip()
+        options = str(data.get('options', '')).strip()
+        answer = str(data.get('answer', '')).strip()
+        create_by = str(data.get('username', '')).strip()
 
         print(f"Title: {title[:50] if title else 'None'}")
         print(f"q_type: {q_type}, level: {level}, course: {course}")
         print(f"Username: {create_by}")
 
         if not q_type:
-            q_type = data.get('type', '').strip()
+            q_type = str(data.get('type', '')).strip()
 
         missing_fields = []
         if not title: missing_fields.append('题干')
